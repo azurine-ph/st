@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Optional, Dict, List
 from get_platform import get_platform
 
-
 COMPILER_MAP = {
     "1.2/base": "mwcc_20_72",
     "1.2/sp2": "mwcc_20_79",
@@ -38,6 +37,7 @@ COMPILER_MAP = {
 
 Library = Dict[str, Any]
 
+
 def get_c_cpp_files(dirs: list[Path]):
     for dir in dirs:
         for root, _, files in os.walk(dir):
@@ -53,6 +53,7 @@ def is_cpp(name: str | Path):
 
 def is_c(name: str | Path):
     return Path(name).suffix in [".c"]
+
 
 class Object:
     def __init__(self, name: str, **options: Any):
@@ -107,13 +108,25 @@ class Object:
 
 
 class ProjectConfig:
-    def __init__(self, game: str, mwcc_root: Optional[str], mwcc_tag: str, wine: str, dsd: Optional[str], cfg_script: Path):
+    def __init__(
+        self,
+        game: str,
+        mwcc_root: Optional[str],
+        mwcc_tag: str,
+        wine: str,
+        dsd: Optional[str],
+        cfg_script: Path,
+    ):
         # Tools
         self.dsd_tag: Optional[str] = None
         self.wibo_tag: Optional[str] = None
         self.objdiff_tag: Optional[str] = None
         self.mwcc_tag = mwcc_tag
-        self.mwcc_root = Path(mwcc_root).resolve() if mwcc_root is not None else self.tools_path / "mwccarm"
+        self.mwcc_root = (
+            Path(mwcc_root).resolve()
+            if mwcc_root is not None
+            else self.tools_path / "mwccarm"
+        )
         self.cfg_script = cfg_script
 
         # Platform info
@@ -123,14 +136,20 @@ class ProjectConfig:
         assert self.platform is not None
         self.default_wibo_path = "./wibo"
         self.wine_path = wine if self.platform.system != "windows" else ""
-        self.dsd_path = (Path(dsd) if dsd is not None else (self.root_path / f"dsd{self.platform.exe}")).resolve()
-        self.objdiff_path = (self.root_path / f"objdiff-cli{self.platform.exe}").resolve()
+        self.dsd_path = (
+            Path(dsd)
+            if dsd is not None
+            else (self.root_path / f"dsd{self.platform.exe}")
+        ).resolve()
+        self.objdiff_path = (
+            self.root_path / f"objdiff-cli{self.platform.exe}"
+        ).resolve()
         self.cc_path = (self.mwcc_path / "mwccarm.exe").resolve()
         self.ld_path = (self.mwcc_path / "mwldarm.exe").resolve()
         self.python_path = Path(sys.executable).resolve()
 
         self.dsd_base_flags = [
-            "--force-color", # Force color output
+            "--force-color",  # Force color output
         ]
 
         self.game = game
@@ -182,15 +201,15 @@ class ProjectConfig:
         """Root directory for dsd configs"""
         config_path = self.config_path / version
         assert config_path.is_dir(), f"Version '{version}' not recognized"
-        return  config_path
+        return config_path
 
     def get_game_build(self, version: str):
         """Path to build directory"""
-        return  self.build_path / version
+        return self.build_path / version
 
     def get_game_extract(self, version: str):
         """Path to extract directory"""
-        return  self.extract_path / version
+        return self.extract_path / version
 
     @property
     def dsd_version(self):
@@ -265,19 +284,26 @@ class ProjectConfig:
         return " ".join(self.dsd_base_flags)
 
     def dsd_configs(self, version: str) -> list[str]:
-        return self.delinks_files[version] + self.relocs_files[version] + self.symbols_files[version]
+        return (
+            self.delinks_files[version]
+            + self.relocs_files[version]
+            + self.symbols_files[version]
+        )
 
     def arm9_config_yaml(self, version: str) -> Path:
         return self.get_game_config(version) / "arm9" / "config.yaml"
 
     def baserom(self, version: str) -> Path:
-        return self.extract_path / f'baserom_{self.game}_{version}.nds'
+        return self.extract_path / f"baserom_{self.game}_{version}.nds"
 
     def build_rom(self, version: str) -> str:
         return f"{self.game}_{version}.nds"
 
-    def baserom_config(self, version: str,) -> Path:
-        return self.get_game_extract(version) / 'config.yaml'
+    def baserom_config(
+        self,
+        version: str,
+    ) -> Path:
+        return self.get_game_extract(version) / "config.yaml"
 
     def build_rom_config(self, version: str) -> Path:
         return self.get_game_build(version) / "build" / "rom_config.yaml"
@@ -301,21 +327,21 @@ class ProjectConfig:
     def files(self, version: str) -> list[dict[str, str]]:
         if self.delinks_jsons[version] is None:
             return []
-        return self.delinks_jsons[version]['files']
+        return self.delinks_jsons[version]["files"]
 
     def delink_files(self, version: str) -> list[str]:
-        delink_files = [file['delink_file'] for file in self.files(version)]
+        delink_files = [file["delink_file"] for file in self.files(version)]
         return list(set(delink_files))
 
     def arm9_lcf_file(self, version: str) -> str:
         if self.delinks_jsons[version] is None:
             return ""
-        return self.delinks_jsons[version]['arm9_lcf_file']
+        return self.delinks_jsons[version]["arm9_lcf_file"]
 
     def arm9_objects_file(self, version: str) -> str:
         if self.delinks_jsons[version] is None:
             return ""
-        return self.delinks_jsons[version]['arm9_objects_file']
+        return self.delinks_jsons[version]["arm9_objects_file"]
 
     def get_config_files(self, version: str, name: str) -> list[str]:
         return [
@@ -342,7 +368,12 @@ class ProjectConfig:
 
     def check_can_run_dsd(self) -> bool:
         try:
-            output = subprocess.run([str(self.dsd_path), "--version"], capture_output=True, text=True, check=True)
+            output = subprocess.run(
+                [str(self.dsd_path), "--version"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
             version = output.stdout.strip().split(" ")[-1]
             if not version.startswith("v"):
                 version = "v" + version
@@ -379,7 +410,7 @@ def add_download_tool_builds(cfg: ProjectConfig, n: ninja_syntax.Writer, args: A
             "tool": "objdiff",
             "tag": cfg.objdiff_version,
             "path": cfg.objdiff_path,
-        }
+        },
     )
     n.newline()
 
@@ -431,20 +462,20 @@ def add_configure_build(cfg: ProjectConfig, n: ninja_syntax.Writer):
             # Require dsd to exist when rerunning configure.py
             str(cfg.dsd_path),
             *dsd_cfg,
-        ]
+        ],
     )
 
 
-def add_extract_build(cfg: ProjectConfig, version: str, n: ninja_syntax.Writer, args: Any):
+def add_extract_build(
+    cfg: ProjectConfig, version: str, n: ninja_syntax.Writer, args: Any
+):
     if not args.no_extract:
         n.build(
             inputs=str(cfg.baserom(version)),
             implicit=str(cfg.dsd_path),
             rule="extract",
             outputs=str(cfg.baserom_config(version)),
-            variables={
-                "output_path": str(cfg.get_game_extract(version))
-            }
+            variables={"output_path": str(cfg.get_game_extract(version))},
         )
         n.newline()
 
@@ -461,15 +492,11 @@ def add_delink_and_lcf_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.
             outputs=delink_files,
             variables={
                 "config_path": str(cfg.arm9_config_yaml(version)),
-            }
+            },
         )
         n.newline()
 
-        n.build(
-            inputs=delink_files,
-            rule="phony",
-            outputs=f"delink_{version}"
-        )
+        n.build(inputs=delink_files, rule="phony", outputs=f"delink_{version}")
         n.newline()
 
     lcf_file = cfg.arm9_lcf_file(version)
@@ -481,7 +508,7 @@ def add_delink_and_lcf_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.
         outputs=[lcf_file, objects_file],
         variables={
             "config_path": str(cfg.arm9_config_yaml(version)),
-        }
+        },
     )
     n.newline()
 
@@ -495,16 +522,24 @@ def add_disassemble_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.Wri
         variables={
             "config_path": str(cfg.arm9_config_yaml(version)),
             "output_path": str(cfg.arm9_disassembly_dir(version)),
-        }
+        },
     )
     n.newline()
 
 
-def add_mwcc_builds(cfg: ProjectConfig, version: str, objects: Dict[str, Object], n: ninja_syntax.Writer, mwcc_implicit: list[str]):
+def add_mwcc_builds(
+    cfg: ProjectConfig,
+    version: str,
+    objects: Dict[str, Object],
+    n: ninja_syntax.Writer,
+    mwcc_implicit: list[str],
+):
     file_map: dict[str, list[str]] = {}
 
     for object in objects.values():
-        file_map[str(object.src_path)] = object.options["cflags"] + object.options["extra_cflags"]
+        file_map[str(object.src_path)] = (
+            object.options["cflags"] + object.options["extra_cflags"]
+        )
 
     if cfg.auto_add_sources:
         for source_file in get_c_cpp_files([cfg.src_path, cfg.libs_path]):
@@ -553,7 +588,7 @@ def add_mwcc_builds(cfg: ProjectConfig, version: str, objects: Dict[str, Object]
 
 def add_mwld_and_rom_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.Writer):
     n.comment("Run linker")
-    objects_to_link = [file['object_to_link'] for file in cfg.files(version)]
+    objects_to_link = [file["object_to_link"] for file in cfg.files(version)]
     elf_file = str(cfg.arm9_o(version))
     lcf_file = cfg.arm9_lcf_file(version)
     objects_file = cfg.arm9_objects_file(version)
@@ -563,19 +598,21 @@ def add_mwld_and_rom_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.Wr
             ld_implicit.append(cfg.wine_path)
 
         # Only passed to the final arm9.o link
-        arm9_ld_flags = " ".join([
-            "-m Entry", # Set entry function
-        ])
+        arm9_ld_flags = " ".join(
+            [
+                "-m Entry",  # Set entry function
+            ]
+        )
         n.build(
             inputs=[*objects_to_link, lcf_file, objects_file],
             implicit=ld_implicit,
             rule="mwld",
             outputs=elf_file,
             variables={
-                'extra_ld_flags': arm9_ld_flags,
-                'lcf_file': str(lcf_file),
-                'objects_file': str(objects_file),
-            }
+                "extra_ld_flags": arm9_ld_flags,
+                "lcf_file": str(lcf_file),
+                "objects_file": str(objects_file),
+            },
         )
         n.newline()
 
@@ -594,7 +631,7 @@ def add_mwld_and_rom_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.Wr
         outputs=rom_config_file,
         variables={
             "config_path": str(cfg.arm9_config_yaml(version)),
-        }
+        },
     )
     n.newline()
 
@@ -617,9 +654,7 @@ def add_mwld_and_rom_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.Wr
     n.build(
         inputs=rom_file,
         rule="sha1",
-        variables={
-            "sha1_file": str(Path(rom_file).with_suffix(".sha1"))
-        },
+        variables={"sha1_file": str(Path(rom_file).with_suffix(".sha1"))},
         outputs=f"sha1_{version}",
     )
     n.newline()
@@ -666,7 +701,7 @@ def add_objdiff_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.Writer)
         variables={
             "config_path": str(cfg.arm9_config_yaml(version)),
             "out_path": str(cfg.get_game_build(version)),
-        }
+        },
     )
     n.newline()
 
@@ -680,13 +715,12 @@ def add_objdiff_builds(cfg: ProjectConfig, version: str, n: ninja_syntax.Writer)
     delink_files = cfg.delink_files(version)
     n.build(
         inputs=[str(out_path)],
-        implicit=[str(cfg.objdiff_path)] + delink_files + cfg.source_object_files(version),
+        implicit=[str(cfg.objdiff_path)]
+        + delink_files
+        + cfg.source_object_files(version),
         rule="objdiff_report",
         outputs=str(cfg.objdiff_report(version)),
-        variables={
-            "dir": str(cfg.get_game_build(version)),
-            "filename": "report.json"
-        }
+        variables={"dir": str(cfg.get_game_build(version)), "filename": "report.json"},
     )
     n.newline()
 
@@ -707,7 +741,7 @@ def add_apply_build(cfg: ProjectConfig, version: str, n: ninja_syntax.Writer):
         variables={
             "config_path": str(cfg.arm9_config_yaml(version)),
             "elf_path": str(cfg.arm9_o(version)),
-        }
+        },
     )
     n.newline()
 
@@ -722,7 +756,9 @@ def create_objdiff_fixup_config(cfg: ProjectConfig, objects: Dict[str, Object]):
 
     out_json["units"] = {}
     for version in cfg.game_versions:
-        out_json["versions"][version]["objdiff"] = str(cfg.get_game_build(version) / "objdiff.json")
+        out_json["versions"][version]["objdiff"] = str(
+            cfg.get_game_build(version) / "objdiff.json"
+        )
 
         for name, object in objects.items():
             out_json["units"][name] = {}
@@ -730,7 +766,9 @@ def create_objdiff_fixup_config(cfg: ProjectConfig, objects: Dict[str, Object]):
         for name, object in objects.items():
             out_json["units"][name]["cflags"] = object.options["cflags"]
             out_json["units"][name]["extra_cflags"] = object.options["extra_cflags"]
-            out_json["units"][name]["mw_version"] = COMPILER_MAP[object.options["mw_version"]]
+            out_json["units"][name]["mw_version"] = COMPILER_MAP[
+                object.options["mw_version"]
+            ]
 
     cfg.build_path.mkdir(exist_ok=True)
     out_path = cfg.build_path / "objdiff_cfg.json"
@@ -748,31 +786,34 @@ def process_project(cfg: ProjectConfig, args: Any):
 
         n.rule(
             name="download_tool",
-            command=f'{cfg.python_path} tools/download_tool.py $tool $tag --path $path'
+            command=f"{cfg.python_path} tools/download_tool.py $tool $tag --path $path",
         )
         n.newline()
 
         if cfg.arm7_bios_path.is_file():
-            n.variable("arm7_bios_flag", f"--arm7-bios {cfg.arm7_bios_path.relative_to(cfg.root_path)}")
+            n.variable(
+                "arm7_bios_flag",
+                f"--arm7-bios {cfg.arm7_bios_path.relative_to(cfg.root_path)}",
+            )
         else:
             n.variable("arm7_bios_flag", "")
         n.newline()
 
         n.rule(
             name="extract",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} rom extract --rom $in --output-path $output_path $arm7_bios_flag"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} rom extract --rom $in --output-path $output_path $arm7_bios_flag",
         )
         n.newline()
 
         n.rule(
             name="delink",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} delink --config-path $config_path"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} delink --config-path $config_path",
         )
         n.newline()
 
         n.rule(
             name="disassemble",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} dis --config-path $config_path --asm-path $output_path --ual"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} dis --config-path $config_path --asm-path $output_path --ual",
         )
         n.newline()
 
@@ -793,75 +834,75 @@ def process_project(cfg: ProjectConfig, args: Any):
         n.newline()
 
         n.rule(
-            name="lcf",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} lcf -c $config_path"
+            name="lcf", command=f"{cfg.dsd_path} {cfg.dsd_flags} lcf -c $config_path"
         )
         n.newline()
 
         n.rule(
             name="mwld",
-            command=f'{cfg.wine_path} "{cfg.ld_path}" {' '.join(cfg.ldflags)} $extra_ld_flags @$objects_file $lcf_file -o $out'
+            command=f'{cfg.wine_path} "{cfg.ld_path}" {' '.join(cfg.ldflags)} $extra_ld_flags @$objects_file $lcf_file -o $out',
         )
         n.newline()
 
         n.rule(
             name="rom_config",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} rom config --elf $in --config $config_path"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} rom config --elf $in --config $config_path",
         )
         n.newline()
 
         n.rule(
             name="rom_build",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} rom build --config $in --rom $out $arm7_bios_flag"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} rom build --config $in --rom $out $arm7_bios_flag",
         )
         n.newline()
 
         cflags = " ".join(cfg.cflags_base)
-        dsd_objdiff_args = " ".join([
-            "--scratch",                                 # Metadata for creating decomp.me scratches
-            f"--compiler {cfg.get_decompme_compiler()}", # decomp.me compiler name
-            f'--c-flags "{cflags} -lang=c++"',           # decomp.me compiler flags
-            "--custom-make ninja",                       # Command for rebuilding files
-        ])
+        dsd_objdiff_args = " ".join(
+            [
+                "--scratch",  # Metadata for creating decomp.me scratches
+                f"--compiler {cfg.get_decompme_compiler()}",  # decomp.me compiler name
+                f'--c-flags "{cflags} -lang=c++"',  # decomp.me compiler flags
+                "--custom-make ninja",  # Command for rebuilding files
+            ]
+        )
         n.rule(
             name="objdiff",
-            command=f"touch {cfg.dsd_path} && {cfg.dsd_path} {cfg.dsd_flags} objdiff --config-path $config_path --output-path $out_path {dsd_objdiff_args}"
+            command=f"touch {cfg.dsd_path} && {cfg.dsd_path} {cfg.dsd_flags} objdiff --config-path $config_path --output-path $out_path {dsd_objdiff_args}",
         )
         n.newline()
 
         n.rule(
             name="objdiff_report",
-            command=f"{cfg.objdiff_path} -C $dir report generate -o $filename"
+            command=f"{cfg.objdiff_path} -C $dir report generate -o $filename",
         )
         n.newline()
 
         n.rule(
             name="m2ctx",
-            command=f"{cfg.python_path} tools/m2ctx.py -g $version -f $out $in"
+            command=f"{cfg.python_path} tools/m2ctx.py -g $version -f $out $in",
         )
         n.newline()
 
         n.rule(
             name="check_modules",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} check modules --config-path $config_path --fail"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} check modules --config-path $config_path --fail",
         )
         n.newline()
 
         n.rule(
             name="check_symbols",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} check symbols --config-path $config_path --elf-path $elf_path --fail --max-lines 20"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} check symbols --config-path $config_path --elf-path $elf_path --fail --max-lines 20",
         )
         n.newline()
 
         n.rule(
             name="apply",
-            command=f"{cfg.dsd_path} {cfg.dsd_flags} apply --config-path $config_path --elf-path $elf_path"
+            command=f"{cfg.dsd_path} {cfg.dsd_flags} apply --config-path $config_path --elf-path $elf_path",
         )
         n.newline()
 
         n.rule(
-            name="sha1",
-            command=f"{cfg.python_path} tools/sha1.py $in -c $sha1_file"
+            name="sha1", command=f"{cfg.python_path} tools/sha1.py $in -c $sha1_file"
         )
         n.newline()
 
@@ -869,19 +910,17 @@ def process_project(cfg: ProjectConfig, args: Any):
         n.rule(
             name="configure",
             command=f"{cfg.python_path} tools/configure.py {configure_cmdline}",
-            generator=True
+            generator=True,
         )
         n.newline()
 
         n.rule(
-            name="format_delinks",
-            command=f"{cfg.python_path} tools/format_delinks.py"
+            name="format_delinks", command=f"{cfg.python_path} tools/format_delinks.py"
         )
         n.newline()
 
         n.rule(
-            name="post_objdiff",
-            command=f"{cfg.python_path} tools/objdiff_config.py"
+            name="post_objdiff", command=f"{cfg.python_path} tools/objdiff_config.py"
         )
         n.newline()
 
@@ -905,14 +944,11 @@ def process_project(cfg: ProjectConfig, args: Any):
             n.build(
                 rule="post_objdiff",
                 implicit=[f"objdiff_{version}.json" for version in cfg.game_versions],
-                outputs="objdiff"
+                outputs="objdiff",
             )
             n.newline()
 
-            n.build(
-                rule="format_delinks",
-                outputs="format_delinks"
-            )
+            n.build(rule="format_delinks", outputs="format_delinks")
             n.newline()
 
             n.default(["format_delinks", "objdiff", *defaults])

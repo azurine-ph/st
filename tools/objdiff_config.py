@@ -19,7 +19,13 @@ class ConfigUnit:
 
 
 class ConfigVersion:
-    def __init__(self, name: Optional[str], options: dict[str, str], units: list[ConfigUnit], root_path: Path):
+    def __init__(
+        self,
+        name: Optional[str],
+        options: dict[str, str],
+        units: list[ConfigUnit],
+        root_path: Path,
+    ):
         self.name = name
         self.objdiff_path = Path(options["objdiff"]).resolve()
 
@@ -44,8 +50,12 @@ class ConfigVersion:
                 return Path("/".join(parts))
 
             if "target_path" in unit_dict:
-                target_path = root_path / get_cleaned_path(Path(unit_dict["target_path"]))
-                self.objdiff_json["units"][i]["target_path"] = str(target_path.resolve())
+                target_path = root_path / get_cleaned_path(
+                    Path(unit_dict["target_path"])
+                )
+                self.objdiff_json["units"][i]["target_path"] = str(
+                    target_path.resolve()
+                )
 
             if "base_path" in unit_dict:
                 base_path = root_path / get_cleaned_path(Path(unit_dict["base_path"]))
@@ -55,10 +65,16 @@ class ConfigVersion:
                 ctx_path = get_cleaned_path(Path(unit_dict["scratch"]["ctx_path"]))
                 self.objdiff_json["units"][i]["scratch"]["ctx_path"] = str(ctx_path)
 
-                entry = self.get_entry_from_name(units, self.objdiff_json["units"][i]["name"])
+                entry = self.get_entry_from_name(
+                    units, self.objdiff_json["units"][i]["name"]
+                )
                 if entry is not None:
-                    self.objdiff_json["units"][i]["scratch"]["c_flags"] = f"{entry.get_all_cflags()} -DVERSION={self.name.upper()}"
-                    self.objdiff_json["units"][i]["scratch"]["compiler"] = entry.mw_version
+                    self.objdiff_json["units"][i]["scratch"][
+                        "c_flags"
+                    ] = f"{entry.get_all_cflags()} -DVERSION={self.name.upper()}"
+                    self.objdiff_json["units"][i]["scratch"][
+                        "compiler"
+                    ] = entry.mw_version
 
     def get_entry_from_name(self, units: list[ConfigUnit], base_name: str):
         split = base_name.split("/")
@@ -70,6 +86,7 @@ class ConfigVersion:
                 return entry
 
         return None
+
 
 class ObjdiffConfig:
     def __init__(self, root_path: Path):
@@ -99,7 +116,11 @@ class ObjdiffConfig:
 
         multi_version = len(cfg_json["versions"].items()) > 1
         for name, options in cfg_json["versions"].items():
-            cfg.versions.append(ConfigVersion(name if multi_version else None, options, units, cfg.root_path))
+            cfg.versions.append(
+                ConfigVersion(
+                    name if multi_version else None, options, units, cfg.root_path
+                )
+            )
 
         return cfg
 

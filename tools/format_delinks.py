@@ -6,7 +6,6 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
-
 INDENT = " " * 4
 SECTION_NAMES = [
     "text",
@@ -62,7 +61,7 @@ class Sections:
             self.rodata,
             self.ctor,
             self.data,
-            self.bss
+            self.bss,
         )
 
     def to_txt(self):
@@ -115,7 +114,9 @@ class Delinks:
                         split = list(dict.fromkeys(line.split(" ")).keys())
                         split.remove("")
 
-                        section: Section = getattr(cur_delink.sections, split[0].removeprefix("."))
+                        section: Section = getattr(
+                            cur_delink.sections, split[0].removeprefix(".")
+                        )
                         section.start = split[1].removeprefix("start:")
                         section.end = split[2].removeprefix("end:")
 

@@ -21,16 +21,20 @@ args = parser.parse_args()
 
 
 def dsd_url(tag: str) -> str:
-    return f'https://github.com/AetiasHax/ds-decomp/releases/download/{tag}/dsd-{platform.system}-{platform.machine}{platform.exe}'
+    return f"https://github.com/AetiasHax/ds-decomp/releases/download/{tag}/dsd-{platform.system}-{platform.machine}{platform.exe}"
+
 
 def mwccarm_url(tag: str) -> str:
-    return 'http://decomp.aetias.com/files/mwccarm.zip'
+    return "http://decomp.aetias.com/files/mwccarm.zip"
+
 
 def wibo_url(tag: str) -> str:
-    return f'https://github.com/decompals/wibo/releases/download/{tag}/wibo'
+    return f"https://github.com/decompals/wibo/releases/download/{tag}/wibo"
+
 
 def objdiff_url(tag: str) -> str:
-    return f'https://github.com/encounter/objdiff/releases/download/{tag}/objdiff-cli-{platform.system}-{platform.machine}{platform.exe}'
+    return f"https://github.com/encounter/objdiff/releases/download/{tag}/objdiff-cli-{platform.system}-{platform.machine}{platform.exe}"
+
 
 TOOLS = {
     "dsd": dsd_url,
@@ -41,13 +45,13 @@ TOOLS = {
 
 
 download_url = TOOLS[args.tool](args.tag)
-print(f'\nDownloading {args.tool} {args.tag}...')
+print(f"\nDownloading {args.tool} {args.tag}...")
 response = requests.get(download_url)
-if download_url.endswith('.zip'):
+if download_url.endswith(".zip"):
     zip_file = zipfile.ZipFile(io.BytesIO(response.content))
     zip_file.extractall(args.path)
 else:
     out_path: Path = args.path
-    with out_path.open('wb') as f:
+    with out_path.open("wb") as f:
         f.write(response.content)
     out_path.chmod(out_path.stat().st_mode | stat.S_IEXEC)
