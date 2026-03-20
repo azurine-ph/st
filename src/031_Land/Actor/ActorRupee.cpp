@@ -79,7 +79,7 @@ ARM bool ActorRupee::vfunc_18(unk32 param1) {
     if (this->func_ov031_020e9d54()) {
         this->mUnk_30 = &data_ov031_02113478;
         this->mUnk_34 = &data_ov031_02113478;
-        SET_FLAG(&this->mFlags, ActorFlag_12);
+        SET_FLAG(this->mFlags, ActorFlag_12);
     }
 
     if (this->mUnk_80 >= 0) {
@@ -87,7 +87,7 @@ ARM bool ActorRupee::vfunc_18(unk32 param1) {
             return false;
         }
 
-        if (this->mUnk_5c.mUnk_6e == 0) {
+        if (this->mUnk_6e == 0) {
             this->func_ov031_020e9904(3);
         } else {
             this->func_ov031_020e9904(10);
